@@ -68,17 +68,17 @@
     font-size: 0.63rem; color: #94a3b8; font-weight: 600;
     border-bottom: 1px solid #e2e8f0;
     border-right: 1.5px solid #e2e8f0;
-    height: 50px;
+    height: 46px;
   }
   .cell {
-    height: 50px;
+    height: 46px;
     border-bottom: 1px solid #e2e8f0;
     border-left: 1px solid #e2e8f0;
     display: flex; align-items: center; justify-content: center;
   }
   .free { background: #f0fdf4; }
   .busy { background: #fff1f2; }
-  .class-label { font-size: 0.65rem; color: #b91c1c; font-weight: 700; text-align: center; }
+  .class-label { font-size: 0.62rem; color: #b91c1c; font-weight: 700; text-align: center; }
 
   /* Summary */
   .summary {
@@ -106,7 +106,7 @@
 <body>
 
 <h1>📅 Horarios Disponibles</h1>
-<p class="subtitle" id="subtitle">Hora Monterrey (GMT‑6) · 8:00 AM – 5:00 PM · Lunes a Viernes</p>
+<p class="subtitle" id="subtitle">Hora Monterrey (GMT‑6) · 8:00 AM – 12:00 AM · Lunes a Viernes</p>
 
 <div class="toggle-wrap">
   <div class="toggle-btn">
@@ -137,78 +137,91 @@ const days = [
   { name: 'Viernes',   today: false },
 ];
 
+// 8AM to 12AM = 17 slots (0=8AM … 16=12AM)
+const allSlots = [
+  '8:00 AM','9:00 AM','10:00 AM','11:00 AM',
+  '12:00 PM','1:00 PM','2:00 PM','3:00 PM',
+  '4:00 PM','5:00 PM','6:00 PM','7:00 PM',
+  '8:00 PM','9:00 PM','10:00 PM','11:00 PM','12:00 AM'
+];
+
+// MTY busy: slot indices from 8AM base
+// Lunes 58510: 10AM-12PM → idx 2,3
+// Martes 58555: 8-9:45AM → idx 0,1 | 58510: 10AM-12PM → idx 2,3
+// Jueves 57354: 8-9:45AM → idx 0,1
+const busyMty = {
+  0: { 2: 'Maestría', 3: 'Maestría' },
+  1: { 0: 'Maestría', 1: 'Maestría', 2: 'Maestría', 3: 'Maestría' },
+  3: { 0: 'Maestría', 1: 'Maestría' },
+};
+
+// París = MTY + 7h, so same slot indices shift +7
+// Lunes 58510: 5-7PM París → idx 9,10
+// Martes 58555: 2:45-4:45PM → idx 6,7 | 58510: 5-7PM → idx 9,10
+// Jueves 57354: 2:45-4:45PM → idx 6,7
+// Viernes 51785: 12:30-2:30PM → idx 4,5
+const busyParis = {
+  0: { 9: 'Maestría', 10: 'Maestría' },
+  1: { 6: 'Maestría', 7: 'Maestría', 9: 'Maestría', 10: 'Maestría' },
+  3: { 6: 'Maestría', 7: 'Maestría' },
+  4: { 4: 'Maestría', 5: 'Maestría' },
+};
+
 const config = {
   mty: {
-    subtitle: 'Hora Monterrey (GMT‑6) · 8:00 AM – 5:00 PM · Lunes a Viernes',
+    subtitle: 'Hora Monterrey (GMT‑6) · 8:00 AM – 12:00 AM · Lunes a Viernes',
     note: '⏰ Clases de Maestría en hora Monterrey (GMT−6)',
-    slots: ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'],
-    // dayIndex: { slotIndex: label }
-    busy: {
-      0: { 2: 'Maestría', 3: 'Maestría' },
-      1: { 0: 'Maestría', 1: 'Maestría', 2: 'Maestría', 3: 'Maestría' },
-      3: { 0: 'Maestría', 1: 'Maestría' },
-    },
+    busy: busyMty,
     summary: [
       { day: 'Lunes',     blocks: [
         { type: 'free', label: '8:00–10:00 AM' },
         { type: 'busy', label: 'Maestría 10:00–12:00 PM' },
-        { type: 'free', label: '12:00–5:00 PM' },
+        { type: 'free', label: '12:00 PM–12:00 AM' },
       ]},
       { day: 'Martes',    blocks: [
         { type: 'busy', label: 'Maestría 8:00–9:45 AM' },
         { type: 'busy', label: 'Maestría 10:00–12:00 PM' },
-        { type: 'free', label: '12:00–5:00 PM' },
+        { type: 'free', label: '12:00 PM–12:00 AM' },
       ]},
       { day: 'Miércoles', blocks: [
-        { type: 'free', label: '8:00 AM–5:00 PM ✓' },
+        { type: 'free', label: '8:00 AM–12:00 AM ✓' },
       ]},
       { day: 'Jueves',    blocks: [
         { type: 'busy', label: 'Maestría 7:45–9:45 AM' },
-        { type: 'free', label: '10:00 AM–5:00 PM' },
+        { type: 'free', label: '10:00 AM–12:00 AM' },
       ]},
       { day: 'Viernes',   blocks: [
-        { type: 'free', label: '8:00 AM–5:00 PM ✓' },
+        { type: 'free', label: '8:00 AM–12:00 AM ✓' },
       ]},
     ]
   },
   paris: {
-    subtitle: 'Hora París (GMT+1) · 2:00 PM – 12:00 AM · Lunes a Viernes',
+    subtitle: 'Hora París (GMT+1) · 8:00 AM – 12:00 AM · Lunes a Viernes',
     note: '⏰ Clases de Maestría en hora París (GMT+1)',
-    slots: ['2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','12:00 AM'],
-    // MTY 8AM = París 3PM, clases:
-    // Lun 58510: 5–7PM París → slots index 3(5PM),4(6PM)
-    // Mar 58555: 2:45–4:45PM → slots 1(3PM),2(4PM)
-    // Mar 58510: 5–7PM → slots 3(5PM),4(6PM)
-    // Jue 57354: 2:45–4:45PM → slots 1(3PM),2(4PM)
-    // Vie 51785: 12:30–2:30PM → starts before 2PM window, partially slot 0(2PM)
-    busy: {
-      0: { 3: 'Maestría', 4: 'Maestría' },
-      1: { 1: 'Maestría', 2: 'Maestría', 3: 'Maestría', 4: 'Maestría' },
-      3: { 1: 'Maestría', 2: 'Maestría' },
-      4: { 0: 'Maestría' },
-    },
+    busy: busyParis,
     summary: [
       { day: 'Lunes',     blocks: [
-        { type: 'free', label: '2:00–5:00 PM' },
+        { type: 'free', label: '8:00 AM–5:00 PM' },
         { type: 'busy', label: 'Maestría 5:00–7:00 PM' },
         { type: 'free', label: '7:00 PM–12:00 AM' },
       ]},
       { day: 'Martes',    blocks: [
-        { type: 'free', label: '2:00–2:45 PM' },
+        { type: 'free', label: '8:00 AM–2:45 PM' },
         { type: 'busy', label: 'Maestría 2:45–4:45 PM' },
         { type: 'busy', label: 'Maestría 5:00–7:00 PM' },
         { type: 'free', label: '7:00 PM–12:00 AM' },
       ]},
       { day: 'Miércoles', blocks: [
-        { type: 'free', label: '2:00 PM–12:00 AM ✓' },
+        { type: 'free', label: '8:00 AM–12:00 AM ✓' },
       ]},
       { day: 'Jueves',    blocks: [
-        { type: 'free', label: '2:00–2:45 PM' },
+        { type: 'free', label: '8:00 AM–2:45 PM' },
         { type: 'busy', label: 'Maestría 2:45–4:45 PM' },
         { type: 'free', label: '4:45 PM–12:00 AM' },
       ]},
       { day: 'Viernes',   blocks: [
-        { type: 'busy', label: 'Maestría hasta 2:30 PM' },
+        { type: 'free', label: '8:00 AM–12:30 PM' },
+        { type: 'busy', label: 'Maestría 12:30–2:30 PM' },
         { type: 'free', label: '2:30 PM–12:00 AM' },
       ]},
     ]
@@ -234,7 +247,7 @@ function buildCalendar(zone) {
     cal.appendChild(dh);
   });
 
-  z.slots.forEach((t, hi) => {
+  allSlots.forEach((t, hi) => {
     const tl = document.createElement('div');
     tl.className = 'time-label';
     tl.textContent = t;
