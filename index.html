@@ -3,14 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Horarios Disponibles – Hora México</title>
+<title>Horarios Disponibles</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #1e293b; padding: 24px; }
-  h1 { text-align: center; font-size: 1.5rem; margin-bottom: 4px; color: #1e293b; font-weight: 800; }
-  .subtitle { text-align: center; font-size: 0.83rem; color: #64748b; margin-bottom: 20px; }
 
-  .legend { display: flex; gap: 18px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  h1 { text-align: center; font-size: 1.5rem; margin-bottom: 4px; color: #1e293b; font-weight: 800; }
+  .subtitle { text-align: center; font-size: 0.83rem; color: #64748b; margin-bottom: 18px; }
+
+  .toggle-wrap { display: flex; justify-content: center; margin-bottom: 22px; }
+  .toggle-btn {
+    display: flex; align-items: center;
+    background: #fff; border: 2px solid #e2e8f0;
+    border-radius: 50px; padding: 4px; gap: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .toggle-btn button {
+    border: none; background: transparent;
+    padding: 8px 22px; border-radius: 50px;
+    font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; color: #94a3b8; transition: all 0.2s;
+  }
+  .toggle-btn button.active {
+    background: #6366f1; color: #fff;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+  }
+
+  .legend { display: flex; gap: 18px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
   .leg { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: #475569; font-weight: 600; }
   .dot { width: 16px; height: 16px; border-radius: 4px; }
   .dot-free  { background: #86efac; border: 1.5px solid #22c55e; }
@@ -18,22 +37,18 @@
 
   .calendar {
     display: grid;
-    grid-template-columns: 72px repeat(7, 1fr);
-    border-radius: 14px;
-    overflow: hidden;
+    grid-template-columns: 76px repeat(5, 1fr);
+    border-radius: 14px; overflow: hidden;
     box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-    border: 1.5px solid #cbd5e1;
-    background: #fff;
+    border: 1.5px solid #cbd5e1; background: #fff;
   }
-
   .header-corner {
     background: #f8fafc;
     border-bottom: 2px solid #e2e8f0;
     border-right: 1.5px solid #e2e8f0;
   }
   .day-header {
-    background: #f8fafc;
-    padding: 12px 4px;
+    background: #f8fafc; padding: 12px 4px;
     text-align: center;
     border-bottom: 2px solid #e2e8f0;
     border-left: 1px solid #e2e8f0;
@@ -44,63 +59,61 @@
   }
   .today .day-name {
     color: #fff; background: #6366f1;
-    border-radius: 20px; padding: 3px 10px;
-    display: inline-block;
+    border-radius: 20px; padding: 3px 10px; display: inline-block;
   }
-
   .time-label {
     background: #f8fafc;
     display: flex; align-items: center; justify-content: flex-end;
     padding-right: 10px;
-    font-size: 0.65rem; color: #94a3b8; font-weight: 600;
+    font-size: 0.63rem; color: #94a3b8; font-weight: 600;
     border-bottom: 1px solid #e2e8f0;
     border-right: 1.5px solid #e2e8f0;
-    height: 52px;
+    height: 50px;
   }
-
   .cell {
-    height: 52px;
+    height: 50px;
     border-bottom: 1px solid #e2e8f0;
     border-left: 1px solid #e2e8f0;
-    position: relative;
+    display: flex; align-items: center; justify-content: center;
   }
-
   .free { background: #f0fdf4; }
   .busy { background: #fff1f2; }
+  .class-label { font-size: 0.65rem; color: #b91c1c; font-weight: 700; text-align: center; }
 
-  .class-label {
-    position: absolute; left: 4px; right: 4px; top: 3px;
-    font-size: 0.58rem; color: #b91c1c; font-weight: 700;
-    line-height: 1.3; pointer-events: none;
-    overflow: hidden; display: -webkit-box;
-    -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-  }
-
+  /* Summary */
   .summary {
-    margin-top: 22px;
-    background: #fff;
-    border-radius: 12px;
-    padding: 18px 22px;
+    margin-top: 22px; background: #fff;
+    border-radius: 12px; padding: 18px 22px;
     box-shadow: 0 2px 12px rgba(0,0,0,0.07);
     border: 1.5px solid #e2e8f0;
   }
   .summary h2 { font-size: 0.95rem; margin-bottom: 14px; color: #1e293b; font-weight: 800; }
-  .day-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; font-size: 0.82rem; flex-wrap: wrap; }
-  .day-tag { font-weight: 800; min-width: 90px; color: #475569; }
-  .avail { color: #16a34a; font-weight: 600; }
+  .day-row {
+    display: flex; align-items: center;
+    gap: 6px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .day-tag { font-weight: 800; min-width: 90px; color: #475569; font-size: 0.85rem; }
   .chip {
-    display: inline-block; padding: 2px 9px; border-radius: 20px;
-    font-size: 0.7rem; font-weight: 700; margin-right: 4px;
+    display: inline-block; padding: 4px 11px; border-radius: 20px;
+    font-size: 0.73rem; font-weight: 700;
   }
   .chip-free { background: #dcfce7; color: #16a34a; }
   .chip-busy { background: #fee2e2; color: #dc2626; }
+  .arrow { color: #cbd5e1; font-size: 1rem; font-weight: 700; }
   .note { font-size: 0.7rem; color: #94a3b8; margin-top: 12px; }
 </style>
 </head>
 <body>
 
 <h1>📅 Horarios Disponibles</h1>
-<p class="subtitle">Hora México (GMT‑6) · 8:00 AM – 5:00 PM</p>
+<p class="subtitle" id="subtitle">Hora Monterrey (GMT‑6) · 8:00 AM – 5:00 PM · Lunes a Viernes</p>
+
+<div class="toggle-wrap">
+  <div class="toggle-btn">
+    <button id="btn-mty" class="active" onclick="setZone('mty')">🇲🇽 Monterrey</button>
+    <button id="btn-paris" onclick="setZone('paris')">🇫🇷 París</button>
+  </div>
+</div>
 
 <div class="legend">
   <div class="leg"><div class="dot dot-free"></div> Disponible</div>
@@ -111,108 +124,176 @@
 
 <div class="summary">
   <h2>📋 Resumen de disponibilidad</h2>
-  <div class="day-row">
-    <span class="day-tag">Domingo</span>
-    <span class="chip chip-free">Libre completo</span>
-    <span class="avail">8:00 AM – 5:00 PM ✓</span>
-  </div>
-  <div class="day-row">
-    <span class="day-tag">Lunes</span>
-    <span class="avail">8–10 AM | 12–5 PM</span>
-    <span class="chip chip-busy">Maestría · 10–12 PM</span>
-  </div>
-  <div class="day-row">
-    <span class="day-tag">Martes</span>
-    <span class="avail">12–5 PM</span>
-    <span class="chip chip-busy">Maestría · 8–9:45 AM</span>
-    <span class="chip chip-busy">Maestría · 10–12 PM</span>
-  </div>
-  <div class="day-row">
-    <span class="day-tag">Miércoles</span>
-    <span class="chip chip-free">Libre completo</span>
-    <span class="avail">8:00 AM – 5:00 PM ✓</span>
-  </div>
-  <div class="day-row">
-    <span class="day-tag">Jueves</span>
-    <span class="avail">~10 AM – 5 PM</span>
-    <span class="chip chip-busy">Maestría · 7:45–9:45 AM</span>
-  </div>
-  <div class="day-row">
-    <span class="day-tag">Viernes</span>
-    <span class="chip chip-free">Libre completo</span>
-    <span class="avail">8:00 AM – 5:00 PM ✓</span>
-  </div>
-  <div class="day-row">
-    <span class="day-tag">Sábado</span>
-    <span class="chip chip-free">Libre completo</span>
-    <span class="avail">8:00 AM – 5:00 PM ✓</span>
-  </div>
-  <p class="note">⏰ Clases de Maestría en hora México (GMT−6)</p>
+  <div id="summary-body"></div>
+  <p class="note" id="note">⏰ Clases de Maestría en hora Monterrey (GMT−6)</p>
 </div>
 
 <script>
 const days = [
-  { name: 'Domingo',    today: false },
   { name: 'Lunes',     today: false },
   { name: 'Martes',    today: false },
   { name: 'Miércoles', today: false },
   { name: 'Jueves',    today: true  },
   { name: 'Viernes',   today: false },
-  { name: 'Sábado',    today: false },
 ];
 
-const timeSlots = [
-  '8:00 AM','9:00 AM','10:00 AM','11:00 AM',
-  '12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'
-];
-
-const busy = {
-  1: { 2: 'Maestría\n10–12 PM', 3: 'Maestría\n11–12 PM' },
-  2: { 0: 'Maestría\n8–9:45 AM', 1: 'Maestría\n(hasta 9:45)', 2: 'Maestría\n10–12 PM', 3: 'Maestría\n11–12 PM' },
-  4: { 0: 'Maestría\n7:45–9:45', 1: 'Maestría\n(hasta 9:45)' },
+const config = {
+  mty: {
+    subtitle: 'Hora Monterrey (GMT‑6) · 8:00 AM – 5:00 PM · Lunes a Viernes',
+    note: '⏰ Clases de Maestría en hora Monterrey (GMT−6)',
+    slots: ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'],
+    // dayIndex: { slotIndex: label }
+    busy: {
+      0: { 2: 'Maestría', 3: 'Maestría' },
+      1: { 0: 'Maestría', 1: 'Maestría', 2: 'Maestría', 3: 'Maestría' },
+      3: { 0: 'Maestría', 1: 'Maestría' },
+    },
+    summary: [
+      { day: 'Lunes',     blocks: [
+        { type: 'free', label: '8:00–10:00 AM' },
+        { type: 'busy', label: 'Maestría 10:00–12:00 PM' },
+        { type: 'free', label: '12:00–5:00 PM' },
+      ]},
+      { day: 'Martes',    blocks: [
+        { type: 'busy', label: 'Maestría 8:00–9:45 AM' },
+        { type: 'busy', label: 'Maestría 10:00–12:00 PM' },
+        { type: 'free', label: '12:00–5:00 PM' },
+      ]},
+      { day: 'Miércoles', blocks: [
+        { type: 'free', label: '8:00 AM–5:00 PM ✓' },
+      ]},
+      { day: 'Jueves',    blocks: [
+        { type: 'busy', label: 'Maestría 7:45–9:45 AM' },
+        { type: 'free', label: '10:00 AM–5:00 PM' },
+      ]},
+      { day: 'Viernes',   blocks: [
+        { type: 'free', label: '8:00 AM–5:00 PM ✓' },
+      ]},
+    ]
+  },
+  paris: {
+    subtitle: 'Hora París (GMT+1) · 2:00 PM – 12:00 AM · Lunes a Viernes',
+    note: '⏰ Clases de Maestría en hora París (GMT+1)',
+    slots: ['2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM','9:00 PM','10:00 PM','12:00 AM'],
+    // MTY 8AM = París 3PM, clases:
+    // Lun 58510: 5–7PM París → slots index 3(5PM),4(6PM)
+    // Mar 58555: 2:45–4:45PM → slots 1(3PM),2(4PM)
+    // Mar 58510: 5–7PM → slots 3(5PM),4(6PM)
+    // Jue 57354: 2:45–4:45PM → slots 1(3PM),2(4PM)
+    // Vie 51785: 12:30–2:30PM → starts before 2PM window, partially slot 0(2PM)
+    busy: {
+      0: { 3: 'Maestría', 4: 'Maestría' },
+      1: { 1: 'Maestría', 2: 'Maestría', 3: 'Maestría', 4: 'Maestría' },
+      3: { 1: 'Maestría', 2: 'Maestría' },
+      4: { 0: 'Maestría' },
+    },
+    summary: [
+      { day: 'Lunes',     blocks: [
+        { type: 'free', label: '2:00–5:00 PM' },
+        { type: 'busy', label: 'Maestría 5:00–7:00 PM' },
+        { type: 'free', label: '7:00 PM–12:00 AM' },
+      ]},
+      { day: 'Martes',    blocks: [
+        { type: 'free', label: '2:00–2:45 PM' },
+        { type: 'busy', label: 'Maestría 2:45–4:45 PM' },
+        { type: 'busy', label: 'Maestría 5:00–7:00 PM' },
+        { type: 'free', label: '7:00 PM–12:00 AM' },
+      ]},
+      { day: 'Miércoles', blocks: [
+        { type: 'free', label: '2:00 PM–12:00 AM ✓' },
+      ]},
+      { day: 'Jueves',    blocks: [
+        { type: 'free', label: '2:00–2:45 PM' },
+        { type: 'busy', label: 'Maestría 2:45–4:45 PM' },
+        { type: 'free', label: '4:45 PM–12:00 AM' },
+      ]},
+      { day: 'Viernes',   blocks: [
+        { type: 'busy', label: 'Maestría hasta 2:30 PM' },
+        { type: 'free', label: '2:30 PM–12:00 AM' },
+      ]},
+    ]
+  }
 };
 
-const cal = document.getElementById('cal');
+function buildCalendar(zone) {
+  const cal = document.getElementById('cal');
+  cal.innerHTML = '';
+  const z = config[zone];
 
-// Corner
-const corner = document.createElement('div');
-corner.className = 'header-corner';
-cal.appendChild(corner);
+  const corner = document.createElement('div');
+  corner.className = 'header-corner';
+  cal.appendChild(corner);
 
-// Day headers
-days.forEach(d => {
-  const dh = document.createElement('div');
-  dh.className = 'day-header' + (d.today ? ' today' : '');
-  const name = document.createElement('div');
-  name.className = 'day-name';
-  name.textContent = d.name;
-  dh.appendChild(name);
-  cal.appendChild(dh);
-});
-
-// Time rows
-timeSlots.forEach((t, hi) => {
-  const tl = document.createElement('div');
-  tl.className = 'time-label';
-  tl.textContent = t;
-  cal.appendChild(tl);
-
-  days.forEach((d, di) => {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    const label = busy[di] && busy[di][hi];
-    if (label) {
-      cell.classList.add('busy');
-      const lbl = document.createElement('div');
-      lbl.className = 'class-label';
-      lbl.textContent = label;
-      cell.appendChild(lbl);
-    } else {
-      cell.classList.add('free');
-    }
-    cal.appendChild(cell);
+  days.forEach(d => {
+    const dh = document.createElement('div');
+    dh.className = 'day-header' + (d.today ? ' today' : '');
+    const name = document.createElement('div');
+    name.className = 'day-name';
+    name.textContent = d.name;
+    dh.appendChild(name);
+    cal.appendChild(dh);
   });
-});
+
+  z.slots.forEach((t, hi) => {
+    const tl = document.createElement('div');
+    tl.className = 'time-label';
+    tl.textContent = t;
+    cal.appendChild(tl);
+
+    days.forEach((d, di) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      const label = z.busy[di] && z.busy[di][hi];
+      if (label) {
+        cell.classList.add('busy');
+        const lbl = document.createElement('div');
+        lbl.className = 'class-label';
+        lbl.textContent = label;
+        cell.appendChild(lbl);
+      } else {
+        cell.classList.add('free');
+      }
+      cal.appendChild(cell);
+    });
+  });
+}
+
+function buildSummary(zone) {
+  const body = document.getElementById('summary-body');
+  body.innerHTML = '';
+  config[zone].summary.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'day-row';
+    const tag = document.createElement('span');
+    tag.className = 'day-tag';
+    tag.textContent = row.day;
+    div.appendChild(tag);
+    row.blocks.forEach((b, i) => {
+      if (i > 0) {
+        const arr = document.createElement('span');
+        arr.className = 'arrow';
+        arr.textContent = '›';
+        div.appendChild(arr);
+      }
+      const chip = document.createElement('span');
+      chip.className = 'chip ' + (b.type === 'free' ? 'chip-free' : 'chip-busy');
+      chip.textContent = b.label;
+      div.appendChild(chip);
+    });
+    body.appendChild(div);
+  });
+}
+
+function setZone(zone) {
+  document.getElementById('btn-mty').classList.toggle('active', zone === 'mty');
+  document.getElementById('btn-paris').classList.toggle('active', zone === 'paris');
+  document.getElementById('subtitle').textContent = config[zone].subtitle;
+  document.getElementById('note').textContent = config[zone].note;
+  buildCalendar(zone);
+  buildSummary(zone);
+}
+
+setZone('mty');
 </script>
 </body>
 </html>
